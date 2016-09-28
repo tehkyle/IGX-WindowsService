@@ -30,6 +30,17 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Ingeniux.CMS.Common, Version=9.0.444.0, Culture=neutral, PublicKeyToken=1b3b2e95d16e0add, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>igxdlls\Ingeniux.CMS.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="Ingeniux.CMS.CSAPI, Version=9.0.444.0, Culture=neutral, PublicKeyToken=1b3b2e95d16e0add, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>igxdlls\Ingeniux.CMS.CSAPI.dll</HintPath>
+    </Reference>
+    <Reference Include="Ingeniux.CMS.Models">
+      <HintPath>igxdlls\Ingeniux.CMS.Models.dll</HintPath>
+    </Reference>
     <Reference Include="MoreLinq, Version=1.4.18916.0, Culture=neutral, PublicKeyToken=384d532d7e88985d, processorArchitecture=MSIL">
       <HintPath>..\packages\morelinq.1.4.0\lib\net35\MoreLinq.dll</HintPath>
       <Private>True</Private>

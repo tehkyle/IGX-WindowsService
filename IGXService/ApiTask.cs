@@ -29,7 +29,8 @@ namespace Ingeniux.Service
 		string SQLConnectionString { get; set; }
 		string ContentStoreConnectionString { get; set; }
 		string SQLCommand { get; set; }
-		string[] SchemaRootNames { get; set; }
+		string XmlPath { get; set; }
+		string OperatingUserId { get; set; }
 		SqlConnection connection { get; set; }
 
 		protected override void OnStart(string[] args)
@@ -38,6 +39,8 @@ namespace Ingeniux.Service
 			{
 				SQLConnectionString = ConfigurationManager.AppSettings["SQLConnectionString"].ToString();
 				ContentStoreConnectionString = ConfigurationManager.AppSettings["ContentStoreConnectionString"].ToString();
+				XmlPath = ConfigurationManager.AppSettings["XmlPath"].ToString();
+				OperatingUserId = ConfigurationManager.AppSettings["OperatingUserId"].ToString();
 				SQLCommand = ConfigurationManager.AppSettings["SQLCommand"].ToString();				
 				
 				log.WriteEntry(string.Format("IGX: Starting SQL Dependency on {0}", SQLConnectionString));
@@ -84,7 +87,9 @@ namespace Ingeniux.Service
 					running = true;
 
 					// Initialize and/or run API class actions.
-					
+					IgxActions actions = new IgxActions(ContentStoreConnectionString, XmlPath, OperatingUserId, log);
+					actions.Execute();
+
 					running = false;
 				}
 				catch (Exception ex)

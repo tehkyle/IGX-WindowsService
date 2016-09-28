@@ -244,3 +244,6 @@ ModelManifest.xml
 .fake/
 *.wixproj
 *.wxs
+
+# Never commit the csapi dlls
+**/igxdlls/*
