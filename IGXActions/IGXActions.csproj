@@ -30,15 +30,16 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Ingeniux.CMS.Common, Version=9.0.444.0, Culture=neutral, PublicKeyToken=1b3b2e95d16e0add, processorArchitecture=MSIL">
+    <Reference Include="Ingeniux.CMS.Common, Version=9.0.493.0, Culture=neutral, PublicKeyToken=1b3b2e95d16e0add, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>igxdlls\Ingeniux.CMS.Common.dll</HintPath>
     </Reference>
-    <Reference Include="Ingeniux.CMS.CSAPI, Version=9.0.444.0, Culture=neutral, PublicKeyToken=1b3b2e95d16e0add, processorArchitecture=MSIL">
+    <Reference Include="Ingeniux.CMS.CSAPI, Version=9.0.493.0, Culture=neutral, PublicKeyToken=1b3b2e95d16e0add, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>igxdlls\Ingeniux.CMS.CSAPI.dll</HintPath>
     </Reference>
-    <Reference Include="Ingeniux.CMS.Models">
+    <Reference Include="Ingeniux.CMS.Models, Version=9.0.493.0, Culture=neutral, PublicKeyToken=1b3b2e95d16e0add, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>igxdlls\Ingeniux.CMS.Models.dll</HintPath>
     </Reference>
     <Reference Include="MoreLinq, Version=1.4.18916.0, Culture=neutral, PublicKeyToken=384d532d7e88985d, processorArchitecture=MSIL">
@@ -48,6 +49,25 @@
     <Reference Include="NLog, Version=4.0.0.0, Culture=neutral, PublicKeyToken=5120e14c03d0593c, processorArchitecture=MSIL">
       <HintPath>..\packages\NLog.4.2.1\lib\net45\NLog.dll</HintPath>
       <Private>True</Private>
+    </Reference>
+    <Reference Include="Raven.Abstractions, Version=2.5.0.0, Culture=neutral, PublicKeyToken=37f41c7f99471593, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>igxdlls\Raven.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Raven.Client.Embedded, Version=2.5.0.0, Culture=neutral, PublicKeyToken=37f41c7f99471593, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>igxdlls\Raven.Client.Embedded.dll</HintPath>
+    </Reference>
+    <Reference Include="Raven.Client.Lightweight, Version=2.5.0.0, Culture=neutral, PublicKeyToken=37f41c7f99471593, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>igxdlls\Raven.Client.Lightweight.dll</HintPath>
+    </Reference>
+    <Reference Include="RavenDBMembership">
+      <HintPath>igxdlls\RavenDBMembership.dll</HintPath>
+    </Reference>
+    <Reference Include="ShoQuan, Version=9.0.175.0, Culture=neutral, PublicKeyToken=1b3b2e95d16e0add, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>igxdlls\ShoQuan.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
