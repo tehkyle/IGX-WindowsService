@@ -43,6 +43,8 @@ namespace Ingeniux.Service
 		IReadonlyUser User;
 		SqlConnection Connection;
 		string CommandString;
+		EventLog log;
+		private string RootCategoryId;
 
 		public IgxActions(ActionProperties props)
 		{
@@ -107,19 +109,7 @@ namespace Ingeniux.Service
 
 			return updatedDocs;
 		}
-
-		public void SessionScopeExample()
-		{
-			using (var session = Store.OpenWriteSession(User))
-			{
-				using (var innerSession = Store.OpenWriteSession(User))
-				{
-
-				}
-			}
-		}
-
-		private string rootCategoryId;
+		
 		/// <summary>
 		/// In this example we use the Taxonomy Manager (on the session) to look for a root
 		/// category that has the name "SQL" that we will use for our category sync. This will
@@ -140,7 +130,7 @@ namespace Ingeniux.Service
 					rootSqlCategory = session.TaxonomyManager.CreateRootCategory("SQL", "Categories synced from sql", "", "");
 
 				// Save the ID, once this session is closed we don't have access to the object anymore and will need to refetch later.
-				rootCategoryId = rootSqlCategory.Id;
+				RootCategoryId = rootSqlCategory.Id;
 			}
 		}
 
@@ -157,17 +147,17 @@ namespace Ingeniux.Service
 
 			int count;
 
-			if (string.IsNullOrWhiteSpace(rootCategoryId))
+			if (string.IsNullOrWhiteSpace(RootCategoryId))
 				CreateSqlRootCategory();
 
 			using (var session = Store.OpenReadSession(User))
 			{
-				ICategoryNode sqlRootCategory = session.TaxonomyManager.Category(rootCategoryId);
+				ICategoryNode sqlRootCategory = session.TaxonomyManager.Category(RootCategoryId);
 				if (sqlRootCategory != null)
 				{
 					IEnumerable<ICategoryNode> sqlCategories = sqlRootCategory.Children(out count);
 					HashSet<string> existingExternalIds = new HashSet<string>(sqlCategories.Select(cat => cat.ExternalID));
-					log.WriteEntry(string.Format("Sql Root Id: {0}", rootCategoryId));
+					log.WriteEntry(string.Format("Sql Root Id: {0}", RootCategoryId));
 
 					package.categoryIdsToUpdate = sqlCategories
 						.Where(c => SqlDocDict.Contains(c.ExternalID))
@@ -202,19 +192,11 @@ namespace Ingeniux.Service
 				}
 
 				// Create new categories for the new docs from sql
-				ICategoryNode sqlRootCategory = session.TaxonomyManager.Category(rootCategoryId);
+				ICategoryNode sqlRootCategory = session.TaxonomyManager.Category(RootCategoryId);
 				foreach (SqlDoc newDoc in package.docsToAdd)
 					session.TaxonomyManager.CreateCategory(newDoc.name, newDoc.desc, newDoc.id, "", sqlRootCategory);
 
 				return true;
-			}
-		}
-
-		public void IndexQueryExample()
-		{
-			using (var session = Store.OpenWriteSession(User))
-			{
-
 			}
 		}
 
@@ -231,7 +213,24 @@ namespace Ingeniux.Service
 			}
 		}
 
-		EventLog log;
+		public void IndexQueryExample()
+		{
+			using (var session = Store.OpenWriteSession(User))
+			{
+
+			}
+		}
+
+		public void SessionScopeExample()
+		{
+			using (var session = Store.OpenWriteSession(User))
+			{
+				using (var innerSession = Store.OpenWriteSession(User))
+				{
+
+				}
+			}
+		}
 
 		public void Dispose()
 		{
