@@ -87,6 +87,14 @@ namespace Ingeniux.Service
 					running = true;
 
 					// Initialize and/or run API class actions.
+					ActionProperties props = new ActionProperties()
+					{
+						contentStoreUrl = ContentStoreConnectionString,
+						xmlPath = XmlPath,
+						userId = OperatingUserId,
+						connection = connection,
+						commandStr = SQLCommand
+					};
 					IgxActions actions = new IgxActions(ContentStoreConnectionString, XmlPath, OperatingUserId, log);
 					actions.Execute();
 

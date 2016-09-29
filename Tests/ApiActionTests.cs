@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Ingeniux.Service;
 using System.Diagnostics;
+using System.Data.SqlClient;
 
 namespace Tests
 {
@@ -10,7 +11,10 @@ namespace Tests
 	{
 		string storeUrl = @"";
 		string xmlPath = @"";
-		string userId = "";
+		string userId = @"";
+		string connectionStr = @"";
+		string commandStr = @"";
+
 		IgxActions Actions;
 
 		[TestMethod]
@@ -21,9 +25,26 @@ namespace Tests
 				EventLog.CreateEventSource("Ingeniux", "IGXLog");
 			log.Source = "Ingeniux";
 			log.Log = "IGXLog";
-			Actions = new IgxActions(storeUrl, xmlPath, userId, log);
-			Assert.IsNotNull(Actions);
-			Actions.Execute();
+
+			using (SqlConnection conn = new SqlConnection(connectionStr))
+			{
+				conn.Open();
+				ActionProperties props = new ActionProperties()
+				{
+					contentStoreUrl = storeUrl,
+					xmlPath = xmlPath,
+					userId = userId,
+					log = log,
+					connection = conn,
+					commandStr = commandStr
+				};
+
+				Actions = new IgxActions(props);
+				
+				Assert.IsNotNull(Actions);
+				Actions.Execute();
+				conn.Close();
+			}
 		}
 	}
 }
