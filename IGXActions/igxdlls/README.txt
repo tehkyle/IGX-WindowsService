@@ -7,6 +7,4 @@ Raven.Abstractions.dll
 Raven.Client.Embedded.dll
 Raven.Client.Lightweight.dll
 RavenDBMembership.dll
-MoreLinq.dll
-NLog.dll
 ShoQuan.dll
