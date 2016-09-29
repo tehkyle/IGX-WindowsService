@@ -6,9 +6,9 @@ using System.Xml.Linq;
 using System.IO;
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using Ingeniux.CMS;
 using System.Data.SqlClient;
-using System.Xml;
+using Ingeniux.CMS;
+using Raven.Client;
 
 namespace Ingeniux.Service
 {
@@ -87,6 +87,11 @@ namespace Ingeniux.Service
 			}
 		}
 
+		/// <summary>
+		/// This is to fetch the contents of the sql command. It is done because the sql dependency event
+		/// does not contain any of this information.
+		/// </summary>
+		/// <returns></returns>
 		public List<SqlDoc> RefetchSqlQuery()
 		{
 			List<SqlDoc> updatedDocs = new List<SqlDoc>();
@@ -225,15 +230,32 @@ namespace Ingeniux.Service
 			}
 		}
 
-		public void IndexQueryExample()
+		/// <summary>
+		/// In this example we will be using the ravenDB query api that is exposed on the session to
+		/// retrieve the first 128 page Ids that have a text field that starts with the search text.
+		/// </summary>
+		/// <param name="searchText">The text to be searched for</param>
+		public void RavenQueryExample(string searchText)
 		{
 			using (var session = Store.OpenWriteSession(User))
 			{
+				RavenQueryStatistics stats;
+				string escapedTerm = string.Format("*{0}*", IGXRavenQueryParser.EscapeFieldValue(searchText.ToLowerInvariant()));
+				// Create the query
+				var query = session.Query<PageFieldIndexableEntry, Ingeniux.CMS.RavenDB.Indexes.FullTextSearchIndex>()
+					.Statistics(out stats)
+					.Search(entry => entry.FieldValue, escapedTerm)
+					.Where(entry => entry.FieldType == CMS.Enums.EnumElementType.IGX_ELEMENT_TEXT);
 
+				IEnumerable<string> results = query.ToArray().Select(result => result.PageId);
+
+				log.WriteEntry(string.Format("Query results with term '{0}': {1}", searchText, results.Join(", ")));
 			}
 		}
 
-		// This example exhibits the behavior of nested sessions.
+		/// <summary>
+		/// This example exhibits the behavior of nested sessions.
+		/// </summary>
 		public void NestedSessionExample()
 		{
 			// Following this...

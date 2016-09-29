@@ -9,3 +9,4 @@ Raven.Client.Lightweight.dll
 RavenDBMembership.dll
 ShoQuan.dll
 HtmlAgilityPack.dll
+Lucene.Net.dll
