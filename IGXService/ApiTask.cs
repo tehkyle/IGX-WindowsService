@@ -24,7 +24,8 @@ namespace Ingeniux.Service
 			log.Source = "Ingeniux";
 			log.Log = "IGXLog";
 		}
-		
+
+		bool running = false;
 		EventLog log { get; set; }
 		string SQLConnectionString { get; set; }
 		string ContentStoreConnectionString { get; set; }
@@ -32,6 +33,8 @@ namespace Ingeniux.Service
 		string XmlPath { get; set; }
 		string OperatingUserId { get; set; }
 		SqlConnection connection { get; set; }
+
+		IgxActions Actions { get; set; }
 
 		protected override void OnStart(string[] args)
 		{
@@ -44,10 +47,27 @@ namespace Ingeniux.Service
 				SQLCommand = ConfigurationManager.AppSettings["SQLCommand"].ToString();				
 				
 				log.WriteEntry(string.Format("IGX: Starting SQL Dependency on {0}", SQLConnectionString));
+
 				SqlDependency.Start(SQLConnectionString);
 				connection = new SqlConnection(SQLConnectionString);
 				connection.Open();
+
+				running = true;
+
 				HookUpSqlDep();
+
+				ActionProperties props = new ActionProperties()
+				{
+					contentStoreUrl = ContentStoreConnectionString,
+					xmlPath = XmlPath,
+					userId = OperatingUserId,
+					connection = connection,
+					commandStr = SQLCommand,
+					log = log
+				};
+				Actions = new IgxActions(props);
+
+				running = false;
 			}
 			catch (Exception ex)
 			{
@@ -69,8 +89,6 @@ namespace Ingeniux.Service
 			}
 
 		}
-
-		bool running = false;
 		
 		protected void OnChanged(object sender, SqlNotificationEventArgs e)
 		{
@@ -89,14 +107,12 @@ namespace Ingeniux.Service
 					// Initialize and/or run API class actions.
 					ActionProperties props = new ActionProperties()
 					{
-						contentStoreUrl = ContentStoreConnectionString,
-						xmlPath = XmlPath,
-						userId = OperatingUserId,
 						connection = connection,
 						commandStr = SQLCommand
 					};
-					IgxActions actions = new IgxActions(ContentStoreConnectionString, XmlPath, OperatingUserId, log);
-					actions.Execute();
+
+					Actions.InitSql(props);
+					Actions.Execute();
 
 					running = false;
 				}
@@ -110,6 +126,7 @@ namespace Ingeniux.Service
 
 		protected override void OnStop()
 		{
+			Actions.Dispose();
 			connection.Close();
 			log.WriteEntry(string.Format("IGX: Service stopped."));
 		}
@@ -126,6 +143,7 @@ namespace Ingeniux.Service
 
 		protected override void OnShutdown()
 		{
+			Actions.Dispose();
 			connection.Close();
 			log.WriteEntry(string.Format("IGX: Service shut down."));
 		}
