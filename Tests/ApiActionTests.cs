@@ -42,9 +42,33 @@ namespace Tests
 				Actions = new IgxActions(props);
 				
 				Assert.IsNotNull(Actions);
-				Actions.Execute();
+				Actions.ExecuteTaxonomySync();
 				conn.Close();
 			}
+		}
+
+		[TestMethod]
+		public void NestedSessionTest()
+		{
+			EventLog log = new EventLog();
+			if (!System.Diagnostics.EventLog.SourceExists("Ingeniux"))
+				EventLog.CreateEventSource("Ingeniux", "IGXLog");
+			log.Source = "Ingeniux";
+			log.Log = "IGXLog";
+			
+			ActionProperties props = new ActionProperties()
+			{
+				contentStoreUrl = storeUrl,
+				xmlPath = xmlPath,
+				userId = userId,
+				log = log
+			};
+
+			Actions = new IgxActions(props);
+
+			Assert.IsNotNull(Actions);
+
+			Actions.NestedSessionExample();
 		}
 	}
 }

@@ -112,7 +112,7 @@ namespace Ingeniux.Service
 					};
 
 					Actions.InitSql(props);
-					Actions.Execute();
+					Actions.ExecuteTaxonomySync();
 
 					running = false;
 				}

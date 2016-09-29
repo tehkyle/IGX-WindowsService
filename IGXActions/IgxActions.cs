@@ -69,7 +69,7 @@ namespace Ingeniux.Service
 			CommandString = props.commandStr;
 		}
 
-		public void Execute()
+		public void ExecuteTaxonomySync()
 		{
 			List<SqlDoc> updatedDocs = new List<SqlDoc>();
 			if (Connection != null && !string.IsNullOrWhiteSpace(CommandString))
@@ -139,6 +139,8 @@ namespace Ingeniux.Service
 		/// the taxonomy categories under the 'SQL' root using the 'ExternalID' values. From this we 
 		/// build a collection of categories and sql doc objects that need updating, deleting, or adding.
 		/// </summary>
+		/// <param name="sqlDocs">Documents retrieved from SQL</param>
+		/// /// <returns>A formatted sync package of ids to sync in a later session</returns>
 		public SyncPackage GenerateSyncPackage(List<SqlDoc> sqlDocs)
 		{
 			SyncPackage package = new SyncPackage();
@@ -170,6 +172,16 @@ namespace Ingeniux.Service
 			return package;
 		}
 
+		/// <summary>
+		/// In this method we take the package generated earlier, and the list of source documents from SQL
+		/// and perform the sync operation. There are three steps:
+		/// 1) Delete deprecated categories - Use the lower level DeleteByIds so we don't need to refetch
+		/// 2) Update the existing categories - Refetch these documents so their context is accurate
+		/// 3) Add new categories - Using the manager, create new categories from the sql documents under the root
+		/// </summary>
+		/// <param name="package">Sync package we generated in GenerateSyncPackage()</param>
+		/// <param name="sqlDocs">Documents retrieved from SQL</param>
+		/// <returns>false if the package is null</returns>
 		public bool CategorySync(SyncPackage package, List<SqlDoc> sqlDocs)
 		{
 			if (package == null)
@@ -221,14 +233,26 @@ namespace Ingeniux.Service
 			}
 		}
 
-		public void SessionScopeExample()
+		// This example exhibits the behavior of nested sessions.
+		public void NestedSessionExample()
 		{
+			// Following this...
 			using (var session = Store.OpenWriteSession(User))
 			{
+				IPage siteRoot = session.Site.SiteRoot();
+				siteRoot.Name = "First Session " + new Random().Next(1, 100);
 				using (var innerSession = Store.OpenWriteSession(User))
 				{
-
+					IPage innerSiteRoot = innerSession.Site.SiteRoot();
+					innerSiteRoot.Name = "Second Session " + new Random().Next(1, 100);
 				}
+			}
+
+			// What is the site root's name now?
+			using (var session = Store.OpenReadSession(User))
+			{
+				IPage siteRoot = session.Site.SiteRoot();
+				log.WriteEntry(string.Format("The site name is: {0}", siteRoot.Name));
 			}
 		}
 

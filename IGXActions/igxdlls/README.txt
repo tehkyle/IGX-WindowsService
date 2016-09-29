@@ -8,3 +8,4 @@ Raven.Client.Embedded.dll
 Raven.Client.Lightweight.dll
 RavenDBMembership.dll
 ShoQuan.dll
+HtmlAgilityPack.dll

@@ -30,6 +30,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="HtmlAgilityPack">
+      <HintPath>igxdlls\HtmlAgilityPack.dll</HintPath>
+    </Reference>
     <Reference Include="Ingeniux.CMS.Common, Version=9.0.493.0, Culture=neutral, PublicKeyToken=1b3b2e95d16e0add, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>igxdlls\Ingeniux.CMS.Common.dll</HintPath>
