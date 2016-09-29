@@ -13,15 +13,15 @@ namespace Ingeniux.Service
     public class IgxActions : IDisposable
     {
 		ContentStore Store;
-		string UserId;
+		IReadonlyUser User;
 
 		public IgxActions(string contentStoreUrl, string xmlPath, string userId, EventLog log)
 		{
 			this.log = log;
 			try
 			{
-				UserId = userId;
 				Store = new ContentStore(contentStoreUrl, xmlPath);
+				User = Store.GetStartingUser(userId);
 			}
 			catch (Exception e)
 			{
@@ -32,7 +32,39 @@ namespace Ingeniux.Service
 
 		public void Execute()
 		{
-			using (var session = Store.OpenWriteSession(Store.GetStartingUser(UserId)))
+			using (var session = Store.OpenWriteSession(User))
+			{
+
+			}
+		}
+
+		public void SessionScopeExample()
+		{
+			using (var session = Store.OpenWriteSession(User))
+			{
+
+			}
+		}
+
+		public void ManagerEntityExample()
+		{
+			using (var session = Store.OpenWriteSession(User))
+			{
+
+			}
+		}
+
+		public void QueryExample()
+		{
+			using (var session = Store.OpenWriteSession(User))
+			{
+
+			}
+		}
+
+		public void IndexQueryExample()
+		{
+			using (var session = Store.OpenWriteSession(User))
 			{
 
 			}
