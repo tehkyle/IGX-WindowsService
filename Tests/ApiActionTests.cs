@@ -12,8 +12,11 @@ namespace Tests
 		string storeUrl = @"";
 		string xmlPath = @"";
 		string userId = @"";
+
+		// Required for SQL sync tests.
 		string connectionStr = @"";
 		string commandStr = @"";
+
 		SqlConnection conn;
 		EventLog log;
 		ActionProperties props;
