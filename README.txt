@@ -2,6 +2,8 @@
 |                                                  |
 |        Ingeniux Windows Service Sample           |
 |       Authors: Kyle Levien & Adam Busbin         |
+|           kyle.levien@ingeniux.com               |
+|           adam.busbin@ingeniux.com               |
 |   For use at the Ingeniux User Conference 2016.  |
 |                                                  |
 *==================================================*
