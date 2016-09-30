@@ -172,12 +172,13 @@ namespace Ingeniux.Service
 				// Create the query
 				var query = session.Query<PageFieldIndexableEntry, Ingeniux.CMS.RavenDB.Indexes.FullTextSearchIndex>()
 					.Statistics(out stats)
-					.Search(entry => entry.FieldValue, escapedTerm, 1, SearchOptions.And, EscapeQueryOptions.AllowAllWildcards)
+					.Search(entry => entry.FieldValue, escapedTerm, 1, SearchOptions.And, EscapeQueryOptions.AllowAllWildcards) // Search must come before Where if the two are mixed.
 					.Where(entry => entry.FieldType == CMS.Enums.EnumElementType.IGX_ELEMENT_TEXT);
 
-				IEnumerable<string> results = query.ToArray().Select(result => result.PageId);
+				string queryStr = query.ToString();
+				IEnumerable <string> results = query.ToArray().Select(result => result.PageId);
 				string resultList = results.Join(", ");
-				log.WriteEntry(string.Format("Query results with term '{0}': {1}", searchText, resultList));
+				log.WriteEntry(string.Format("{0}: \n{1}", queryStr, resultList));
 			}
 		}
 
