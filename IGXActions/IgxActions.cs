@@ -63,6 +63,149 @@ namespace Ingeniux.Service
 			}
 		}
 
+		/// <summary>
+		/// In this example we show the two main ways to log to the CSAPI log. A session object must exist
+		/// to log, and the four log levels in increasing severity are Debug, Info, Warn, and Error
+		/// </summary>
+		/// <param name="msg"></param>
+		public void CMSLoggingExample(string msg = "")
+		{
+			using (var session = Store.OpenReadSession(User))
+			{
+				if (string.IsNullOrWhiteSpace(msg))
+					session.Debug("This is a debug-level log!");
+				else
+					session.Info(msg); // This one in info-level
+
+				session.Log(NLog.LogLevel.Warn, "You can also use this method for passed in log levels.");
+			}
+		}
+
+		/// <summary>
+		/// In this example we show how to use a transactional session to access the database. A session
+		/// is the backbone to working with the CSAPI, following a transactional database model that 
+		/// aligns 1-to-1 with the underlying Raven document database technology. Our session object
+		/// wraps up the RavenDB DocumentSession.
+		/// </summary>
+		public void SessionExample()
+		{
+			int count;
+
+			// A session is opened from the ContentStore and given a User identity.
+			// We recommend enclosing it in a using block so the commit is handled automatically.
+			using (var session = Store.OpenReadSession(User))
+			{
+				// Managers are ITransactionalEntity objects on the session that are used to do all
+				// the work to manipulate the entities in the api: fetching, creating, deleting.
+				IPage siteRoot = session.Site.SiteRoot();
+				// Note you can get the current user from the session as well. OperatingUser == User in this case.
+				var assignedCount = session.Site.PagesAssignedToUserCount(session.OperatingUser);
+
+				// An IPage is an IEntity which corresponds 1-to-1 with a document in the database.
+				// They can have additional relative functionality to fetch other documents.
+				// Here we get the first 10 children of the siteRoot.
+				// NOTE: an IEntity object fetched in the session uses that session to do further loading.
+				//		-This means that if the session is closed the Entity can no longer perform database actions.
+				IEnumerable<IPage> children = siteRoot.Children(out count, 10);
+
+			}   // Here is where the session commits its changes.
+
+			IUserGroup adminGroup;
+			// Here we show what happens when you try to use an entity outside of its session.
+			using (var session = Store.OpenReadSession(User))
+			{
+				adminGroup = session.UserManager.UserGroup(UserManager.ADMINISTRATOR_GROUP_ID);
+				IEnumerable<IUser> users = adminGroup.Users(out count);
+			}
+			try
+			{
+				adminGroup.Users(out count);
+			}
+			catch (Exception e)
+			{
+				// The above call will throw an exception because the adminGroup entity is attempting
+				// to use a session that has been closed.
+			}
+
+			string childId1;
+			string childId2;
+			// In this example we use a write session to create two folder pages in two separate
+			// but methods with the same outcome.
+			using (var session = Store.OpenWriteSession(User))
+			{
+				IPage siteRoot = session.Site.SiteRoot();
+				ISchema schema = session.SchemasManager.SystemSchema(CMS.Enums.EnumSystemSchema.Folder);
+				ISchema sameSchema = session.SchemasManager.SchemaByRootName("Folder");
+
+				IPage child1 = siteRoot.CreateChildPage("New Page 1", schema);
+				IPage child2 = session.Site.CreatePage(sameSchema, "New Page 2", siteRoot);
+
+				// Save the ids of the created pages so we can fetch and use them in future sessions.
+				childId1 = child1.Id;
+				childId2 = child2.Id;
+			}	// Let this session close to commit the new pages to the DB
+
+			// Using a fresh new write session, fetch the pages we created and delete them in two
+			// separate methods with the same result. A page remove is just a move to the recycle folder.
+			using (var session = Store.OpenWriteSession(User))
+			{
+				IPage page1 = session.Site.Page(childId1);
+				IPage page2 = session.Site.Page(childId2);
+				IPage recycleFolder = session.Site.RecycleFolder();
+
+				session.Site.RemovePage(ref page1);
+				session.Site.MovePage(page2, recycleFolder, CMS.Enums.EnumCopyActions.IGX_MAKE_CHILD);
+			}
+		}
+
+		/// <summary>
+		/// In this example we will be using the ravenDB query api that is exposed on the session to
+		/// retrieve the first 128 page Ids that have a text field that starts with the search text.
+		/// </summary>
+		/// <param name="searchText">The text to be searched for</param>
+		public void RavenQueryExample(string searchText)
+		{
+			using (var session = Store.OpenWriteSession(User))
+			{
+				RavenQueryStatistics stats;
+				string escapedTerm = string.Format("*{0}*", searchText.ToLowerInvariant());
+				// Create the query
+				var query = session.Query<PageFieldIndexableEntry, Ingeniux.CMS.RavenDB.Indexes.FullTextSearchIndex>()
+					.Statistics(out stats)
+					.Search(entry => entry.FieldValue, escapedTerm, 1, SearchOptions.And, EscapeQueryOptions.AllowAllWildcards)
+					.Where(entry => entry.FieldType == CMS.Enums.EnumElementType.IGX_ELEMENT_TEXT);
+
+				IEnumerable<string> results = query.ToArray().Select(result => result.PageId);
+				string resultList = results.Join(", ");
+				log.WriteEntry(string.Format("Query results with term '{0}': {1}", searchText, resultList));
+			}
+		}
+
+		/// <summary>
+		/// This example exhibits the behavior of nested sessions.
+		/// </summary>
+		public void NestedSessionExample()
+		{
+			// Following this...
+			using (var session = Store.OpenWriteSession(User))
+			{
+				IPage siteRoot = session.Site.SiteRoot();
+				siteRoot.Name = "First Session " + new Random().Next(1, 100);
+				using (var innerSession = Store.OpenWriteSession(User))
+				{
+					IPage innerSiteRoot = innerSession.Site.SiteRoot();
+					innerSiteRoot.Name = "Second Session " + new Random().Next(1, 100);
+				}
+			}
+
+			// What is the site root's name now?
+			using (var session = Store.OpenReadSession(User))
+			{
+				IPage siteRoot = session.Site.SiteRoot();
+				log.WriteEntry(string.Format("The site name is: {0}", siteRoot.Name));
+			}
+		}
+
 		public void InitSql(ActionProperties props)
 		{
 			Connection = props.connection;
@@ -214,67 +357,6 @@ namespace Ingeniux.Service
 					session.TaxonomyManager.CreateCategory(newDoc.name, newDoc.desc, newDoc.id, "", sqlRootCategory);
 
 				return true;
-			}
-		}
-
-		public void CMSLoggingExample(string msg = "")
-		{
-			using (var session = Store.OpenReadSession(User))
-			{
-				if (string.IsNullOrWhiteSpace(msg))
-					session.Debug("This is a debug-level log!");
-				else
-					session.Info(msg); // This one in info-level
-
-				session.Log(NLog.LogLevel.Warn, "You can also use this method for passed in log levels.");
-			}
-		}
-
-		/// <summary>
-		/// In this example we will be using the ravenDB query api that is exposed on the session to
-		/// retrieve the first 128 page Ids that have a text field that starts with the search text.
-		/// </summary>
-		/// <param name="searchText">The text to be searched for</param>
-		public void RavenQueryExample(string searchText)
-		{
-			using (var session = Store.OpenWriteSession(User))
-			{
-				RavenQueryStatistics stats;
-				string escapedTerm = string.Format("*{0}*", searchText.ToLowerInvariant());
-				// Create the query
-				var query = session.Query<PageFieldIndexableEntry, Ingeniux.CMS.RavenDB.Indexes.FullTextSearchIndex>()
-					.Statistics(out stats)
-					.Search(entry => entry.FieldValue, escapedTerm, 1, SearchOptions.And, EscapeQueryOptions.AllowAllWildcards)
-					.Where(entry => entry.FieldType == CMS.Enums.EnumElementType.IGX_ELEMENT_TEXT);
-
-				IEnumerable<string> results = query.ToArray().Select(result => result.PageId);
-				string resultList = results.Join(", ");
-				log.WriteEntry(string.Format("Query results with term '{0}': {1}", searchText, resultList));
-			}
-		}
-
-		/// <summary>
-		/// This example exhibits the behavior of nested sessions.
-		/// </summary>
-		public void NestedSessionExample()
-		{
-			// Following this...
-			using (var session = Store.OpenWriteSession(User))
-			{
-				IPage siteRoot = session.Site.SiteRoot();
-				siteRoot.Name = "First Session " + new Random().Next(1, 100);
-				using (var innerSession = Store.OpenWriteSession(User))
-				{
-					IPage innerSiteRoot = innerSession.Site.SiteRoot();
-					innerSiteRoot.Name = "Second Session " + new Random().Next(1, 100);
-				}
-			}
-
-			// What is the site root's name now?
-			using (var session = Store.OpenReadSession(User))
-			{
-				IPage siteRoot = session.Site.SiteRoot();
-				log.WriteEntry(string.Format("The site name is: {0}", siteRoot.Name));
 			}
 		}
 

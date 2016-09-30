@@ -14,11 +14,14 @@ namespace Tests
 		string userId = @"";
 		string connectionStr = @"";
 		string commandStr = @"";
+		SqlConnection conn;
+		EventLog log;
+		ActionProperties props;
 
 		IgxActions Actions;
 
-		[TestMethod]
-		public void MainTest()
+		[TestInitialize]
+		public void Init()
 		{
 			EventLog log = new EventLog();
 			if (!System.Diagnostics.EventLog.SourceExists("Ingeniux"))
@@ -26,72 +29,53 @@ namespace Tests
 			log.Source = "Ingeniux";
 			log.Log = "IGXLog";
 
-			using (SqlConnection conn = new SqlConnection(connectionStr))
+			props = new ActionProperties()
 			{
-				conn.Open();
-				ActionProperties props = new ActionProperties()
-				{
-					contentStoreUrl = storeUrl,
-					xmlPath = xmlPath,
-					userId = userId,
-					log = log,
-					connection = conn,
-					commandStr = commandStr
-				};
+				contentStoreUrl = storeUrl,
+				xmlPath = xmlPath,
+				userId = userId,
+				log = log,
+				commandStr = commandStr
+			};
 
-				Actions = new IgxActions(props);
-				
-				Assert.IsNotNull(Actions);
-				Actions.ExecuteTaxonomySync();
-				conn.Close();
+			if (!string.IsNullOrWhiteSpace(connectionStr)) {
+				conn = new SqlConnection(connectionStr);
+				conn.Open();
+				props.connection = conn;
 			}
+
+			Actions = new IgxActions(props);
+			Assert.IsNotNull(Actions);
+		}
+
+		[TestCleanup]
+		public void cleanup()
+		{
+			Actions.Dispose();
+			conn.Close();
+		}
+
+		[TestMethod]
+		public void TaxonomySyncTest()
+		{
+			Actions.ExecuteTaxonomySync();
+		}
+
+		[TestMethod]
+		public void SessionTest()
+		{
+			Actions.SessionExample();
 		}
 
 		[TestMethod]
 		public void NestedSessionTest()
 		{
-			EventLog log = new EventLog();
-			if (!System.Diagnostics.EventLog.SourceExists("Ingeniux"))
-				EventLog.CreateEventSource("Ingeniux", "IGXLog");
-			log.Source = "Ingeniux";
-			log.Log = "IGXLog";
-			
-			ActionProperties props = new ActionProperties()
-			{
-				contentStoreUrl = storeUrl,
-				xmlPath = xmlPath,
-				userId = userId,
-				log = log
-			};
-
-			Actions = new IgxActions(props);
-
-			Assert.IsNotNull(Actions);
-
 			Actions.NestedSessionExample();
 		}
 
 		[TestMethod]
 		public void RavenQueryTest()
 		{
-			EventLog log = new EventLog();
-			if (!System.Diagnostics.EventLog.SourceExists("Ingeniux"))
-				EventLog.CreateEventSource("Ingeniux", "IGXLog");
-			log.Source = "Ingeniux";
-			log.Log = "IGXLog";
-
-			ActionProperties props = new ActionProperties()
-			{
-				contentStoreUrl = storeUrl,
-				xmlPath = xmlPath,
-				userId = userId,
-				log = log
-			};
-
-			Actions = new IgxActions(props);
-
-			Assert.IsNotNull(Actions);
-
 			Actions.RavenQueryExample("Lorem");
 		}
 	}
