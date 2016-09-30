@@ -240,16 +240,16 @@ namespace Ingeniux.Service
 			using (var session = Store.OpenWriteSession(User))
 			{
 				RavenQueryStatistics stats;
-				string escapedTerm = string.Format("*{0}*", IGXRavenQueryParser.EscapeFieldValue(searchText.ToLowerInvariant()));
+				string escapedTerm = string.Format("*{0}*", searchText.ToLowerInvariant());
 				// Create the query
 				var query = session.Query<PageFieldIndexableEntry, Ingeniux.CMS.RavenDB.Indexes.FullTextSearchIndex>()
 					.Statistics(out stats)
-					.Search(entry => entry.FieldValue, escapedTerm)
+					.Search(entry => entry.FieldValue, escapedTerm, 1, SearchOptions.And, EscapeQueryOptions.AllowAllWildcards)
 					.Where(entry => entry.FieldType == CMS.Enums.EnumElementType.IGX_ELEMENT_TEXT);
 
 				IEnumerable<string> results = query.ToArray().Select(result => result.PageId);
-
-				log.WriteEntry(string.Format("Query results with term '{0}': {1}", searchText, results.Join(", ")));
+				string resultList = results.Join(", ");
+				log.WriteEntry(string.Format("Query results with term '{0}': {1}", searchText, resultList));
 			}
 		}
 
